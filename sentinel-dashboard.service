@@ -1,0 +1,19 @@
+[Unit]
+Description=Sentinel Dashboard (Frontend + Backend)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ddpm
+WorkingDirectory=/home/ddpm/Downloads/Sentinel-Dashboard-master
+Environment=PATH=/home/ddpm/.nvm/versions/node/v22.22.0/bin:/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
+ExecStart=/home/ddpm/.nvm/versions/node/v22.22.0/bin/npm start
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/ddpm/Downloads/Sentinel-Dashboard-master/logs/dashboard.log
+StandardError=append:/home/ddpm/Downloads/Sentinel-Dashboard-master/logs/dashboard-error.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 220 26% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 20% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 20% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 193 95% 55%;
+    --primary-foreground: 220 26% 6%;
+
+    --secondary: 220 17% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 17% 18%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 193 95% 55%;
+    --accent-foreground: 220 26% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 210 40% 98%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 26% 6%;
+
+    --critical: 0 72% 51%;
+    --high: 14 90% 53%;
+    --medium: 38 92% 50%;
+    --low: 45 93% 47%;
+
+    --border: 220 17% 18%;
+    --input: 220 17% 18%;
+    --ring: 193 95% 55%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 220 20% 10%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 193 95% 55%;
+    --sidebar-primary-foreground: 220 26% 6%;
+    --sidebar-accent: 220 17% 18%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 17% 18%;
+    --sidebar-ring: 193 95% 55%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(193 95% 55% / 0.2), hsl(220 26% 6%));
+    --gradient-card: linear-gradient(135deg, hsl(220 20% 12%), hsl(220 17% 10%));
+    --glow-primary: 0 0 40px hsl(193 95% 55% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Leaflet map styling */
+.leaflet-container {
+  font-family: inherit;
+}
+
+.leaflet-popup-content-wrapper {
+  background: hsl(var(--popover));
+  color: hsl(var(--popover-foreground));
+  border-radius: 0.5rem;
+  border: 1px solid hsl(var(--border));
+}
+
+.leaflet-popup-tip {
+  background: hsl(var(--popover));
+}
+
+.leaflet-control-zoom a {
+  background-color: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: hsl(var(--accent));
+}

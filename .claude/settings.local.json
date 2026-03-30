@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(cd:*)",
+      "Bash(curl:*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(pm2 list:*)",
+      "Bash(which node:*)",
+      "Bash(snap list:*)",
+      "Read(//snap/bin/**)",
+      "Read(//usr/local/bin/**)",
+      "Bash(npx pm2:*)",
+      "Bash(echo:*)",
+      "Bash(sudo -n true 2>/dev/null && echo \"sudo available without password\" || echo \"sudo needs password\")",
+      "Bash(chmod:*)",
+      "Bash(sudo bash:*)",
+      "Bash(systemctl status:*)",
+      "Bash(npm list:*)",
+      "Bash(npx vite:*)",
+      "Bash(cp:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(f''''Total incidents: {len\\(data\\)}''''\\)\")"
+    ],
+    "defaultMode": "bypassPermissions"
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true
+  }
+}

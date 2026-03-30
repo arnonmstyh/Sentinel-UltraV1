@@ -1,0 +1,161 @@
+/* AI Companion Widget Styles */
+.ai-companion-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  transition: all 0.3s ease;
+}
+
+.ai-companion-widget.minimized {
+  height: 64px;
+}
+
+.ai-companion-widget.expanded {
+  height: 384px;
+}
+
+/* Ensure the widget appears above all other content */
+.ai-companion-widget .card {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgb(55, 65, 81);
+  background-color: rgb(17, 24, 39) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+/* Force rounded corners for all elements */
+.ai-companion-widget * {
+  border-radius: inherit;
+}
+
+/* Specific rounded corner overrides */
+.ai-companion-widget .rounded-t-2xl {
+  border-radius: 16px 16px 0 0 !important;
+}
+
+.ai-companion-widget .rounded-b-2xl {
+  border-radius: 0 0 16px 16px !important;
+}
+
+.ai-companion-widget .rounded-2xl {
+  border-radius: 16px !important;
+}
+
+.ai-companion-widget .rounded-xl {
+  border-radius: 12px !important;
+}
+
+.ai-companion-widget .rounded-lg {
+  border-radius: 8px !important;
+}
+
+/* Force black theme for all elements */
+.ai-companion-widget {
+  background-color: rgb(17, 24, 39) !important;
+}
+
+.ai-companion-widget .bg-gray-900 {
+  background-color: rgb(17, 24, 39) !important;
+}
+
+.ai-companion-widget .bg-gray-800 {
+  background-color: rgb(31, 41, 55) !important;
+}
+
+.ai-companion-widget .bg-gray-700 {
+  background-color: rgb(55, 65, 81) !important;
+}
+
+/* Force input area to always be visible */
+.ai-companion-widget .input-area {
+  opacity: 1 !important;
+  visibility: visible !important;
+  display: flex !important;
+}
+
+/* Input styling improvements */
+.ai-companion-widget input {
+  background-color: rgb(55, 65, 81) !important;
+  border-color: rgb(75, 85, 99) !important;
+  color: rgb(229, 231, 235) !important;
+}
+
+.ai-companion-widget input::placeholder {
+  color: rgb(156, 163, 175) !important;
+}
+
+/* Animation for the floating button */
+.ai-companion-button {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Message animations */
+.message-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Typing indicator animation */
+.typing-dots span {
+  animation: typingDot 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .ai-companion-widget {
+    bottom: 16px;
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+  
+  .ai-companion-widget .card {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+/* Ensure proper stacking context */
+.ai-companion-widget * {
+  position: relative;
+  z-index: inherit;
+}

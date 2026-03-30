@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1120"/>
+      <stop offset="50%" stop-color="#0f1d32"/>
+      <stop offset="100%" stop-color="#0b1120"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.04" stroke="#22d3ee" stroke-width="0.5">
+    <line x1="0" y1="0" x2="0" y2="630" /><line x1="60" y1="0" x2="60" y2="630" />
+    <line x1="120" y1="0" x2="120" y2="630" /><line x1="180" y1="0" x2="180" y2="630" />
+    <line x1="240" y1="0" x2="240" y2="630" /><line x1="300" y1="0" x2="300" y2="630" />
+    <line x1="360" y1="0" x2="360" y2="630" /><line x1="420" y1="0" x2="420" y2="630" />
+    <line x1="480" y1="0" x2="480" y2="630" /><line x1="540" y1="0" x2="540" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" /><line x1="660" y1="0" x2="660" y2="630" />
+    <line x1="720" y1="0" x2="720" y2="630" /><line x1="780" y1="0" x2="780" y2="630" />
+    <line x1="840" y1="0" x2="840" y2="630" /><line x1="900" y1="0" x2="900" y2="630" />
+    <line x1="960" y1="0" x2="960" y2="630" /><line x1="1020" y1="0" x2="1020" y2="630" />
+    <line x1="1080" y1="0" x2="1080" y2="630" /><line x1="1140" y1="0" x2="1140" y2="630" />
+    <line x1="1200" y1="0" x2="1200" y2="630" />
+    <line x1="0" y1="0" x2="1200" y2="0" /><line x1="0" y1="60" x2="1200" y2="60" />
+    <line x1="0" y1="120" x2="1200" y2="120" /><line x1="0" y1="180" x2="1200" y2="180" />
+    <line x1="0" y1="240" x2="1200" y2="240" /><line x1="0" y1="300" x2="1200" y2="300" />
+    <line x1="0" y1="360" x2="1200" y2="360" /><line x1="0" y1="420" x2="1200" y2="420" />
+    <line x1="0" y1="480" x2="1200" y2="480" /><line x1="0" y1="540" x2="1200" y2="540" />
+    <line x1="0" y1="600" x2="1200" y2="600" />
+  </g>
+
+  <!-- Glow effect behind shield -->
+  <ellipse cx="600" cy="260" rx="180" ry="160" fill="url(#glow)"/>
+
+  <!-- Shield icon -->
+  <g transform="translate(540, 140)">
+    <path d="M60 0 L120 20 V60 C120 97.5 97.5 127.5 60 135 C22.5 127.5 0 97.5 0 60 V20 Z" fill="url(#accent)" opacity="0.9"/>
+    <path d="M60 12 L108 28 V60 C108 91 90 117 60 124 C30 117 12 91 12 60 V28 Z" fill="#0f172a"/>
+    <text x="60" y="80" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="38" fill="#22d3ee">SE</text>
+  </g>
+
+  <!-- Top accent line -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#accent)"/>
+
+  <!-- Title -->
+  <text x="600" y="340" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="56" fill="#f1f5f9" letter-spacing="2">AIT SOC</text>
+
+  <!-- Subtitle -->
+  <text x="600" y="385" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="400" font-size="22" fill="#94a3b8" letter-spacing="4">SENTINEL DASHBOARD</text>
+
+  <!-- Divider -->
+  <rect x="500" y="410" width="200" height="1" fill="#22d3ee" opacity="0.4"/>
+
+  <!-- Description -->
+  <text x="600" y="450" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" fill="#64748b">Cyber Security Operations Center</text>
+
+  <!-- Bottom feature badges -->
+  <g transform="translate(280, 490)">
+    <rect x="0" y="0" width="160" height="36" rx="18" fill="#22d3ee" fill-opacity="0.08" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="80" y="23" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#22d3ee">Threat Detection</text>
+  </g>
+  <g transform="translate(460, 490)">
+    <rect x="0" y="0" width="140" height="36" rx="18" fill="#22d3ee" fill-opacity="0.08" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="70" y="23" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#22d3ee">Incident Mgmt</text>
+  </g>
+  <g transform="translate(620, 490)">
+    <rect x="0" y="0" width="140" height="36" rx="18" fill="#22d3ee" fill-opacity="0.08" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="70" y="23" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#22d3ee">SSL Monitor</text>
+  </g>
+  <g transform="translate(780, 490)">
+    <rect x="0" y="0" width="140" height="36" rx="18" fill="#22d3ee" fill-opacity="0.08" stroke="#22d3ee" stroke-opacity="0.2" stroke-width="1"/>
+    <text x="70" y="23" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="13" fill="#22d3ee">AI Analytics</text>
+  </g>
+
+  <!-- Bottom border -->
+  <rect x="0" y="627" width="1200" height="3" fill="url(#accent)" opacity="0.5"/>
+</svg>

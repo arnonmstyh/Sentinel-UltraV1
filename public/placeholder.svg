@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="1200" fill="url(#bg)" rx="3"/>
+  <!-- Shield icon -->
+  <g transform="translate(480, 400)">
+    <path d="M120 0 L240 40 V120 C240 195 195 255 120 270 C45 255 0 195 0 120 V40 Z" fill="url(#accent)" opacity="0.15" stroke="#22d3ee" stroke-width="2" stroke-opacity="0.3"/>
+    <path d="M120 24 L216 56 V120 C216 182 180 234 120 248 C60 234 24 182 24 120 V56 Z" fill="#0f172a"/>
+    <text x="120" y="160" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-weight="bold" font-size="72" fill="#22d3ee">SE</text>
+  </g>
+  <!-- Decorative ring -->
+  <circle cx="600" cy="530" r="200" fill="none" stroke="#22d3ee" stroke-opacity="0.06" stroke-width="1"/>
+  <circle cx="600" cy="530" r="260" fill="none" stroke="#22d3ee" stroke-opacity="0.03" stroke-width="1"/>
+  <!-- Label -->
+  <text x="600" y="760" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="28" fill="#475569" letter-spacing="6">SENTINEL</text>
+</svg>

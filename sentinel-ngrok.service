@@ -1,0 +1,19 @@
+[Unit]
+Description=Sentinel Dashboard Ngrok Tunnel (Frontend Only)
+After=network-online.target sentinel-dashboard.service
+Wants=network-online.target
+Requires=sentinel-dashboard.service
+
+[Service]
+Type=simple
+User=ddpm
+WorkingDirectory=/home/ddpm/Downloads/Sentinel-Dashboard-master
+ExecStartPre=/bin/sleep 5
+ExecStart=/home/ddpm/.local/bin/ngrok start --all --config=/home/ddpm/Downloads/Sentinel-Dashboard-master/ngrok.yml
+Restart=always
+RestartSec=15
+StandardOutput=append:/home/ddpm/Downloads/Sentinel-Dashboard-master/logs/ngrok.log
+StandardError=append:/home/ddpm/Downloads/Sentinel-Dashboard-master/logs/ngrok-error.log
+
+[Install]
+WantedBy=multi-user.target
