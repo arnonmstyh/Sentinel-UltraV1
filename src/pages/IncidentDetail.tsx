@@ -113,15 +113,19 @@ const IncidentDetail = () => {
     return { text: 'No Response', color: 'text-red-500', bg: 'bg-red-100' };
   };
 
-  const handleSave = () => {
-    updateIncident(incident.id, {
-      status: editedIncident.status as any,
-      responder: editedIncident.responder,
-      responseStatus: editedIncident.responseStatus as any,
-      notes: editedIncident.notes
-    });
-    setIsEditing(false);
-    toast.success("Incident updated successfully");
+  const handleSave = async () => {
+    try {
+      await updateIncident(incident.id, {
+        status: editedIncident.status as any,
+        responder: editedIncident.responder,
+        responseStatus: editedIncident.responseStatus as any,
+        notes: editedIncident.notes
+      });
+      toast.success("Incident updated successfully");
+      setIsEditing(false);
+    } catch {
+      // updateIncident already surfaced the error via toast.error. Keep edit mode open so the user can retry.
+    }
   };
 
   const handleCancel = () => {
@@ -135,13 +139,17 @@ const IncidentDetail = () => {
     setShowEventForm(false);
   };
 
-  const handleDelete = () => {
-    deleteIncident(incident.id);
-    toast.success("Incident deleted successfully");
-    navigate("/incidents");
+  const handleDelete = async () => {
+    try {
+      await deleteIncident(incident.id);
+      toast.success("Incident deleted successfully");
+      navigate("/incidents");
+    } catch {
+      // deleteIncident already surfaced the error; stay on the page.
+    }
   };
 
-  const handleAddTimelineEvent = () => {
+  const handleAddTimelineEvent = async () => {
     if (!newEventDescription.trim()) {
       toast.error("Please enter a description for the timeline event");
       return;
@@ -156,12 +164,15 @@ const IncidentDetail = () => {
     };
 
     const updatedTimeline = [...(incident.timelineEvents || []), newEvent];
-    updateIncident(incident.id, { timelineEvents: updatedTimeline });
-
-    setNewEventStatus("investigating");
-    setNewEventDescription("");
-    setShowEventForm(false);
-    toast.success("Timeline event added");
+    try {
+      await updateIncident(incident.id, { timelineEvents: updatedTimeline });
+      setNewEventStatus("investigating");
+      setNewEventDescription("");
+      setShowEventForm(false);
+      toast.success("Timeline event added");
+    } catch {
+      // updateIncident already surfaced the error via toast; leave the form open so the user can retry.
+    }
   };
 
   const formatTimestamp = (ts: string | Date) => {

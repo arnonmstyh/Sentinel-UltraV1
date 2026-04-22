@@ -7,7 +7,7 @@ const { initScheduler, updateAllUrls, checkAndSendExpirationAlerts, pollServiceH
 const { checkSSL, checkServiceHealth } = require('./sslService');
 const { seedIncidents, syncIncidentsFromSheet: syncFromSheet } = require('./incidentService');
 const { sendTelegramMessage } = require('./telegramService');
-const { validateUrl, validateBulkUrls, validateIncident } = require('./middleware/validation');
+const { validateUrl, validateBulkUrls, validateIncident, validateIncidentUpdate } = require('./middleware/validation');
 const { apiLimiter, writeLimiter, bulkLimiter } = require('./middleware/rateLimit');
 const { errorHandler, asyncHandler } = require('./middleware/errorHandler');
 
@@ -165,18 +165,66 @@ app.post('/api/incidents', writeLimiter, validateIncident, asyncHandler(async (r
     res.status(201).json(newIncident);
 }));
 
-// PUT update incident
-app.put('/api/incidents/:id', writeLimiter, asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const updates = req.body;
+// Allowed status transitions for user-driven updates. Sync (syncIncidentsFromSheet) bypasses this.
+const STATUS_TRANSITIONS = {
+    open: ['investigating'],
+    investigating: ['open', 'resolved'],
+    resolved: ['investigating', 'closed'],
+    closed: ['open']
+};
 
-    const incident = await Incident.findByPk(id);
+// PUT update incident with optimistic concurrency + state-machine
+app.put('/api/incidents/:id', writeLimiter, validateIncidentUpdate, asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const body = req.body || {};
+
+    // OCC precondition: client must submit its known version.
+    if (body.version === undefined || body.version === null) {
+        return res.status(428).json({ error: 'Missing version — include the incident\'s current version in the request body (optimistic concurrency).' });
+    }
+    const clientVersion = Number(body.version);
+
+    // Include soft-deleted so we can return 410 rather than 404 for deleted rows.
+    const incident = await Incident.findByPk(id, { paranoid: false });
     if (!incident) {
         return res.status(404).json({ error: 'Incident not found' });
     }
+    if (incident.deletedAt) {
+        return res.status(410).json({ error: 'Incident has been deleted' });
+    }
 
-    await incident.update(updates);
-    res.json(incident);
+    // State-machine check (only for user PUTs; sync has its own rules).
+    if (body.status !== undefined && body.status !== incident.status) {
+        const allowed = STATUS_TRANSITIONS[incident.status] || [];
+        if (!allowed.includes(body.status)) {
+            return res.status(400).json({
+                error: `Illegal status transition: ${incident.status} → ${body.status}`,
+                allowedTransitions: allowed
+            });
+        }
+    }
+
+    // Strip server-managed and non-persisted fields before writing.
+    const { version: _v, id: _id, createdAt: _ca, updatedAt: _ua, deletedAt: _da, sheetRowHash: _srh, ...newFields } = body;
+
+    // Race-free compare-and-swap. If another writer beat us, affected === 0 → 409.
+    const [affected] = await Incident.update(
+        { ...newFields, version: clientVersion + 1 },
+        { where: { id, version: clientVersion } }
+    );
+
+    if (affected === 0) {
+        const current = await Incident.findByPk(id, { paranoid: false });
+        res.set('Retry-After', '1');
+        return res.status(409).json({
+            error: 'Version mismatch — this incident was updated by someone else. Refresh and retry.',
+            currentVersion: current ? current.version : null,
+            currentIncident: current
+        });
+    }
+
+    const updated = await Incident.findByPk(id);
+    res.json(updated);
 }));
 
 // DELETE incident

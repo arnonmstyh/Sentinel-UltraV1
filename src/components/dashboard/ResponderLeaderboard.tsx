@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useIncidents } from "@/context/useIncidents";
-import { Trophy, Clock, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Trophy, Clock, CheckCircle2, AlertTriangle, Flag } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const ResponderLeaderboard = () => {
   const { incidents } = useIncidents();
@@ -88,10 +89,19 @@ const ResponderLeaderboard = () => {
   return (
     <Card className="bg-gradient-card border-border h-full flex flex-col">
       <CardHeader className="pb-2 flex-shrink-0">
-        <CardTitle className="flex items-center gap-2">
-          <Trophy className="w-5 h-5 text-primary" />
-          Responder Leaderboard
-        </CardTitle>
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-primary" />
+            Responder Leaderboard
+          </CardTitle>
+          <Link
+            to="/responders/live-race"
+            className="flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.18em] text-primary transition-colors hover:bg-primary/20"
+          >
+            <Flag className="h-2.5 w-2.5" />
+            Live Race
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="flex-1 flex flex-col min-h-0">
         <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">

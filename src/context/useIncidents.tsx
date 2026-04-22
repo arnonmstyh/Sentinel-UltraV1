@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Incident } from '@/types/incident';
 import { getApiUrl, apiFetch } from '@/lib/api';
+import { toast } from 'sonner';
 
 interface IncidentsContextType {
   incidents: Incident[];
@@ -10,12 +11,22 @@ interface IncidentsContextType {
   lastSyncTime: Date | null;
   autoRefreshInterval: number;
   setAutoRefreshInterval: (interval: number) => void;
-  addIncident: (incident: Omit<Incident, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Incident>;
-  updateIncident: (id: string, updates: Partial<Incident>) => void;
-  deleteIncident: (id: string) => void;
+  addIncident: (incident: Omit<Incident, 'id' | 'createdAt' | 'updatedAt' | 'version' | 'deletedAt'>) => Promise<Incident>;
+  updateIncident: (id: string, updates: Partial<Incident>) => Promise<void>;
+  deleteIncident: (id: string) => Promise<void>;
   getIncidentById: (id: string) => Incident | undefined;
   refreshData: () => Promise<void>;
 }
+
+// Parse a server incident payload into the frontend shape (dates, JSON arrays).
+const parseIncident = (raw: any): Incident => ({
+  ...raw,
+  createdAt: new Date(raw.createdAt),
+  updatedAt: new Date(raw.updatedAt),
+  deletedAt: raw.deletedAt ? new Date(raw.deletedAt) : null,
+  destinationIPs: typeof raw.destinationIPs === 'string' ? JSON.parse(raw.destinationIPs) : raw.destinationIPs,
+  timelineEvents: typeof raw.timelineEvents === 'string' ? JSON.parse(raw.timelineEvents) : (raw.timelineEvents || []),
+});
 
 const IncidentsContext = createContext<IncidentsContextType | undefined>(undefined);
 
@@ -52,16 +63,7 @@ export const IncidentsProvider: React.FC<IncidentsProviderProps> = ({ children }
       if (!response.ok) throw new Error('Failed to fetch incidents');
 
       const data = await response.json();
-
-      // Parse dates
-      const parsedIncidents = data.map((item: any) => ({
-        ...item,
-        createdAt: new Date(item.createdAt),
-        updatedAt: new Date(item.updatedAt),
-        // Ensure arrays are arrays (sqlite stores as JSON string sometimes if not handled by sequelize properly, but sequelize should handle it)
-        destinationIPs: typeof item.destinationIPs === 'string' ? JSON.parse(item.destinationIPs) : item.destinationIPs,
-        timelineEvents: typeof item.timelineEvents === 'string' ? JSON.parse(item.timelineEvents) : (item.timelineEvents || [])
-      }));
+      const parsedIncidents = data.map(parseIncident);
 
       setIncidents(parsedIncidents);
       setLastSyncTime(new Date());
@@ -97,38 +99,47 @@ export const IncidentsProvider: React.FC<IncidentsProviderProps> = ({ children }
     return () => clearInterval(intervalId);
   }, [autoRefreshInterval]);
 
-  const addIncident = async (incidentData: Omit<Incident, 'id' | 'createdAt' | 'updatedAt'>): Promise<Incident> => {
-    const response = await apiFetch(`${getApiUrl()}/api/incidents`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(incidentData),
-    });
+  const addIncident = async (incidentData: Omit<Incident, 'id' | 'createdAt' | 'updatedAt' | 'version' | 'deletedAt'>): Promise<Incident> => {
+    try {
+      const response = await apiFetch(`${getApiUrl()}/api/incidents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(incidentData),
+      });
 
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(errorBody || 'Failed to create incident');
+      if (!response.ok) {
+        const errorBody = await response.text();
+        let message = 'Failed to create incident';
+        try {
+          const parsed = JSON.parse(errorBody);
+          message = parsed.error || (parsed.details && parsed.details.join('; ')) || message;
+        } catch { /* text body */ message = errorBody || message; }
+        toast.error(message);
+        throw new Error(message);
+      }
+
+      const parsedIncident = parseIncident(await response.json());
+      setIncidents(prev => [parsedIncident, ...prev]);
+      return parsedIncident;
+    } catch (err) {
+      if (!(err instanceof Error && err.message.startsWith('Failed'))) {
+        toast.error('Failed to create incident (network error)');
+      }
+      throw err;
     }
-
-    const created = await response.json();
-
-    const parsedIncident: Incident = {
-      ...created,
-      createdAt: new Date(created.createdAt),
-      updatedAt: new Date(created.updatedAt),
-      destinationIPs: typeof created.destinationIPs === 'string' ? JSON.parse(created.destinationIPs) : created.destinationIPs,
-      timelineEvents: typeof created.timelineEvents === 'string' ? JSON.parse(created.timelineEvents) : (created.timelineEvents || []),
-    };
-
-    // Prepend new incident to state
-    setIncidents(prev => [parsedIncident, ...prev]);
-
-    return parsedIncident;
   };
 
-  const updateIncident = async (id: string, updates: Partial<Incident>) => {
-    // Optimistic update
+  const updateIncident = async (id: string, updates: Partial<Incident>): Promise<void> => {
+    const current = incidents.find(i => i.id === id);
+    if (!current) {
+      toast.error('Cannot update: incident not found in current view');
+      throw new Error('Incident not found in state');
+    }
+
+    // Snapshot for rollback on non-conflict failures.
+    const previousIncidents = incidents;
+
+    // Optimistic update.
     setIncidents(prev =>
       prev.map(incident =>
         incident.id === id
@@ -137,39 +148,75 @@ export const IncidentsProvider: React.FC<IncidentsProviderProps> = ({ children }
       )
     );
 
+    let response: Response;
     try {
-      await apiFetch(`${getApiUrl()}/api/incidents/${id}`, {
+      response = await apiFetch(`${getApiUrl()}/api/incidents/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updates),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...updates, version: current.version }),
       });
     } catch (err) {
-      console.error('Failed to save incident update:', err);
-      // Revert or show error could go here
+      // Network error.
+      console.error('Network error during incident update:', err);
+      setIncidents(previousIncidents);
+      toast.error('Network error — your change was not saved.');
+      throw err;
     }
+
+    if (response.ok) {
+      const saved = parseIncident(await response.json());
+      setIncidents(prev => prev.map(i => (i.id === id ? saved : i)));
+      return;
+    }
+
+    // Parse server error payload.
+    let body: any = {};
+    try { body = await response.json(); } catch { /* leave empty */ }
+
+    if (response.status === 409) {
+      // Conflict — replace local state with server's current view so user sees actual values.
+      if (body.currentIncident) {
+        const server = parseIncident(body.currentIncident);
+        setIncidents(prev => prev.map(i => (i.id === id ? server : i)));
+      } else {
+        setIncidents(previousIncidents);
+      }
+      toast.error('This incident was changed by someone else. Your update was not saved — please review the current values and try again.');
+      throw new Error('Version conflict');
+    }
+
+    // All other failures — rollback and surface server message.
+    setIncidents(previousIncidents);
+    const msg = body.error
+      || (body.details && body.details.join('; '))
+      || `Save failed (HTTP ${response.status})`;
+    toast.error(msg);
+    throw new Error(msg);
   };
 
-  const deleteIncident = async (id: string) => {
-    // Capture previous state for rollback
+  const deleteIncident = async (id: string): Promise<void> => {
     const previousIncidents = incidents;
-
-    // Optimistic removal
     setIncidents(prev => prev.filter(incident => incident.id !== id));
 
+    let response: Response;
     try {
-      const response = await apiFetch(`${getApiUrl()}/api/incidents/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete incident');
-      }
+      response = await apiFetch(`${getApiUrl()}/api/incidents/${id}`, { method: 'DELETE' });
     } catch (err) {
-      console.error('Failed to delete incident, rolling back:', err);
-      // Rollback on error
+      console.error('Network error during incident delete:', err);
       setIncidents(previousIncidents);
+      toast.error('Network error — incident was not deleted.');
+      throw err;
+    }
+
+    if (!response.ok) {
+      setIncidents(previousIncidents);
+      let msg = `Delete failed (HTTP ${response.status})`;
+      try {
+        const body = await response.json();
+        msg = body.error || msg;
+      } catch { /* ignore */ }
+      toast.error(msg);
+      throw new Error(msg);
     }
   };
 

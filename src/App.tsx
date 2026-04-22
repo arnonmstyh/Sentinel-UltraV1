@@ -15,6 +15,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SSLMonitor from "./pages/SSLMonitor";
+import ResponderLiveRace from "./pages/ResponderLiveRace";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="incidents/:id" element={<IncidentDetail />} />
                 <Route path="reports" element={<Reports />} />
                 <Route path="ssl-monitor" element={<SSLMonitor />} />
+                <Route path="responders/live-race" element={<ResponderLiveRace />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Route>

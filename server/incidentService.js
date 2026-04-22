@@ -5,6 +5,13 @@ const { Incident } = require('./db');
 const SPREADSHEET_ID = '1brP4N888QF_dKmSxAMNrK6B3wtNRJEuyEK1co808HJQ';
 const SHEET_GID = '211809601';
 
+// Responder names that indicate fully-automated handling → case is auto-closed on every sync.
+const AUTO_CLOSE_RESPONDERS = new Set(['ai ait csoc']);
+
+function isAutoCloseResponder(responder) {
+    return AUTO_CLOSE_RESPONDERS.has((responder || '').toLowerCase().trim());
+}
+
 async function fetchGoogleSheetsData() {
     try {
         const csvUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
@@ -119,19 +126,26 @@ function mapRowToIncident(row, headers, index) {
     // Generate unique hash for this row
     const sheetRowHash = generateRowHash(rowData);
 
+    // AI-handled cases are always considered closed AND responded, regardless of what the sheet's Status/Response columns say.
+    const autoHandled = isAutoCloseResponder(responder);
+    const status = autoHandled ? 'closed' : (statusMap[statusRaw] || 'open');
+    const responseStatus = autoHandled
+        ? 'responded'
+        : ((rowData.Response || '').toLowerCase() === 'yes' ? 'responded' : 'pending');
+
     return {
         id: `INC-${String(index + 1).padStart(3, '0')}`,
         title: `${rowData.Type} from ${rowData.Src_IP}`,
         description: `Security incident detected: ${rowData.Type}. Source: ${rowData.Src_IP}, Destination: ${destinationIPs.join(', ')}`,
         severity: severityMap[(rowData.RiskLevel || '').toLowerCase()] || 'medium',
-        status: statusMap[statusRaw] || 'open',
+        status: status,
         sourceIP: rowData.Src_IP,
         destinationIPs: destinationIPs,
         country: country,
         type: rowData.Type,
         responder: responder,
         responseTime: responseTimeRaw || null,
-        responseStatus: (rowData.Response || '').toLowerCase() === 'yes' ? 'responded' : 'pending',
+        responseStatus: responseStatus,
         notes: (rowData.Note || '').trim() || '',
         timelineEvents: [],
         sheetRowHash: sheetRowHash,
@@ -156,7 +170,8 @@ async function seedIncidents() {
         const incidents = rows.map((row, index) => mapRowToIncident(row, headers, index));
 
         if (incidents.length > 0) {
-            await Incident.bulkCreate(incidents);
+            // Explicit version:0 — bulkCreate sometimes bypasses column defaults.
+            await Incident.bulkCreate(incidents.map(i => ({ ...i, version: 0 })));
             console.log(`Successfully seeded ${incidents.length} incidents.`);
         }
     } catch (error) {
@@ -168,7 +183,11 @@ async function seedIncidents() {
  * Sync incidents from Google Sheets.
  * - Uses sheetRowHash (MD5 of Time|Type|Src_IP) for exact dedup
  * - Only inserts truly new rows
- * - Updates responder, status, severity for existing rows if changed in sheet
+ * - Updates responder, severity, country, responseTime, responseStatus, and createdAt (Detect time) for existing rows if changed in sheet
+ * - Status is app-owned: never overwritten on existing rows (sheet seeds it on insert only)
+ * - Exception — auto-handled responders (AUTO_CLOSE_RESPONDERS, e.g. "AI AIT CSOC"):
+ *     - status is forced to 'closed' on every sync (overrides app-owned-status)
+ *     - responseStatus is forced to 'responded' on every sync (regardless of sheet's Response column)
  * - Preserves app-only fields (notes, timelineEvents)
  */
 async function syncIncidentsFromSheet() {
@@ -183,8 +202,8 @@ async function syncIncidentsFromSheet() {
 
         const sheetIncidents = rows.map((row, index) => mapRowToIncident(row, headers, index));
 
-        // Get all existing incidents and build hash lookup
-        const existing = await Incident.findAll();
+        // Get all existing incidents (including soft-deleted) so we can skip rows the user has deleted.
+        const existing = await Incident.findAll({ paranoid: false });
         const hashMap = new Map();   // sheetRowHash -> incident
         const titleMap = new Map();  // title+sourceIP+type -> incident (fallback for old records without hash)
 
@@ -217,6 +236,11 @@ async function syncIncidentsFromSheet() {
             // Primary match: by sheetRowHash (exact)
             let existingInc = hashMap.get(sheetInc.sheetRowHash);
 
+            // If the matched incident was soft-deleted by a user, respect that intent: skip (don't update, don't re-insert).
+            if (existingInc && existingInc.deletedAt) {
+                continue;
+            }
+
             // Fallback match: for old records without hash, match by title + closest timestamp
             if (!existingInc) {
                 const fallbackKey = `${sheetInc.title}|${sheetInc.sourceIP}|${sheetInc.type}`;
@@ -228,6 +252,7 @@ async function syncIncidentsFromSheet() {
                 let bestDiff = Infinity;
                 for (const cand of candidates) {
                     if (cand.sheetRowHash) continue; // Already matched by hash
+                    if (cand.deletedAt) continue; // Don't match against soft-deleted rows
                     const candTs = new Date(cand.createdAt).getTime();
                     const diff = Math.abs(sheetTs - candTs);
                     if (diff < bestDiff && diff < 24 * 60 * 60 * 1000) {
@@ -251,11 +276,20 @@ async function syncIncidentsFromSheet() {
                 await Incident.create({ ...sheetInc, id: newId });
                 added++;
             } else {
-                // Existing incident - sync fields from sheet (responder, status, severity, etc.)
+                // Existing incident - sync fields from sheet (responder, severity, etc.). Status is app-owned and intentionally not synced here, with one exception: auto-close responders (see below).
                 const updates = {};
                 if (sheetInc.severity !== existingInc.severity) updates.severity = sheetInc.severity;
-                if (sheetInc.status !== existingInc.status) updates.status = sheetInc.status;
                 if (sheetInc.country !== existingInc.country) updates.country = sheetInc.country;
+
+                // Keep Detect time (createdAt) in sync with the sheet's Time column. The sheet is authoritative for when the incident was detected.
+                const sheetCreatedMs = sheetInc.createdAt ? new Date(sheetInc.createdAt).getTime() : null;
+                const existingCreatedMs = existingInc.createdAt ? new Date(existingInc.createdAt).getTime() : null;
+                if (sheetCreatedMs && sheetCreatedMs !== existingCreatedMs) updates.createdAt = sheetInc.createdAt;
+
+                // Auto-close rule: if the sheet says this incident is handled by an automated responder (e.g. AI AIT CSOC), force status to 'closed' on every sync — overrides the app-owned-status rule for this specific case.
+                if (isAutoCloseResponder(sheetInc.responder) && existingInc.status !== 'closed') {
+                    updates.status = 'closed';
+                }
                 if (sheetInc.responseStatus !== existingInc.responseStatus) updates.responseStatus = sheetInc.responseStatus;
                 if (sheetInc.responseTime && sheetInc.responseTime !== existingInc.responseTime) updates.responseTime = sheetInc.responseTime;
 

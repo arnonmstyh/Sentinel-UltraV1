@@ -83,14 +83,22 @@ const Incident = sequelize.define('Incident', {
     responder: DataTypes.STRING,
     responseTime: DataTypes.STRING,
     responseStatus: DataTypes.STRING,
-    notes: DataTypes.TEXT, // New field for incident notes
-    timelineEvents: DataTypes.JSON, // Stores array of events
+    notes: DataTypes.TEXT,
+    timelineEvents: DataTypes.JSON,
     sheetRowHash: {
-        type: DataTypes.STRING, // Fingerprint from Google Sheet row for dedup
+        type: DataTypes.STRING,
         allowNull: true
+    },
+    // Optimistic concurrency control. Bumped only by the PUT handler; sync writes do NOT increment this.
+    version: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
     },
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE
+}, {
+    paranoid: true // Soft delete: destroy() sets deletedAt instead of removing the row.
 });
 
 const initDb = async () => {

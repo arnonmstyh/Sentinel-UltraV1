@@ -18,8 +18,10 @@ export interface Incident {
   responder?: string;
   responseTime?: string;
   responseStatus?: 'responded' | 'pending';
-  notes?: string; // New field
+  notes?: string;
   timelineEvents: TimelineEvent[];
+  version: number;
+  deletedAt?: Date | null;
 }
 
 export interface TimelineEvent {

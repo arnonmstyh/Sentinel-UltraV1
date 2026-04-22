@@ -21,7 +21,10 @@
       "Bash(npx vite:*)",
       "Bash(cp:*)",
       "WebFetch(domain:github.com)",
-      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(f''''Total incidents: {len\\(data\\)}''''\\)\")"
+      "Bash(python3 -c \"import sys,json; data=json.load\\(sys.stdin\\); print\\(f''''Total incidents: {len\\(data\\)}''''\\)\")",
+      "Bash(sudo -S apt install gh -y)",
+      "Bash(~/.local/bin/gh auth:*)",
+      "Bash(git remote:*)"
     ],
     "defaultMode": "bypassPermissions"
   },
