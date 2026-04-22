@@ -7,7 +7,6 @@ interface RaceHeaderProps {
   responderCount: number;
   totalIncidents: number;
   totalResolved: number;
-  mode: "mock" | "live";
 }
 
 const RaceHeader = ({
@@ -15,7 +14,6 @@ const RaceHeader = ({
   responderCount,
   totalIncidents,
   totalResolved,
-  mode,
 }: RaceHeaderProps) => {
   const [now, setNow] = useState(Date.now());
 
@@ -73,16 +71,12 @@ const RaceHeader = ({
           <Stat icon={<Users className="h-3.5 w-3.5" />} label="Drivers" value={responderCount} />
           <Stat icon={<Flag className="h-3.5 w-3.5" />} label="Incidents" value={totalIncidents} />
           <Stat icon={<Activity className="h-3.5 w-3.5" />} label="Resolved" value={totalResolved} accent />
-          <div className="rounded-md border border-border/70 bg-black/50 px-3 py-1.5">
+          <div className="rounded-md border border-success/50 bg-success/10 px-3 py-1.5">
             <div className="font-mono text-[9px] uppercase tracking-[0.22em] text-muted-foreground">
               Mode
             </div>
-            <div
-              className={`font-mono text-xs font-bold ${
-                mode === "live" ? "text-success" : "text-primary"
-              }`}
-            >
-              {mode === "live" ? "LIVE DATA" : "DEMO LAP"}
+            <div className="font-mono text-xs font-bold text-success">
+              LIVE DATA
             </div>
           </div>
         </div>

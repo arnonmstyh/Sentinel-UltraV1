@@ -8,7 +8,6 @@ import {
   buildLeaderboardFromIncidents,
   type RaceResponder,
 } from "@/lib/raceMetrics";
-import { useMockRaceTicker } from "@/lib/useMockRaceTicker";
 import { usePreviousRanks } from "@/lib/usePreviousRanks";
 import RaceHeader from "@/components/race/RaceHeader";
 import RaceRow, { GRID_COLS } from "@/components/race/RaceRow";
@@ -16,21 +15,18 @@ import RaceTrackMap from "@/components/race/RaceTrackMap";
 import RaceMiniLeaderboard from "@/components/race/RaceMiniLeaderboard";
 import ResponderDetailDialog from "@/components/race/ResponderDetailDialog";
 
-type Mode = "mock" | "live";
-
 const ResponderLiveRace = () => {
-  const [mode, setMode] = useState<Mode>("mock");
   const [selectedName, setSelectedName] = useState<string | null>(null);
-  const { incidents } = useIncidents();
-  const mock = useMockRaceTicker();
+  // Pin session start at mount — do NOT let it re-read Date.now() every render,
+  // otherwise the session clock stays glued to 00:00.
+  const [sessionStart] = useState(() => Date.now());
+  const { incidents, loading, error } = useIncidents();
 
-  const liveRows: RaceResponder[] = useMemo(
+  const rows: RaceResponder[] = useMemo(
     () => buildLeaderboardFromIncidents(incidents),
     [incidents],
   );
 
-  const rows: RaceResponder[] = mode === "live" ? liveRows : mock.rows;
-  const sessionStart = mode === "live" ? Date.now() : mock.sessionStart;
   const previousRanks = usePreviousRanks(rows);
 
   const leaderScore = rows[0]?.score ?? 0;
@@ -43,7 +39,6 @@ const ResponderLiveRace = () => {
   );
   const totalIncidents = rows.reduce((a, r) => a + r.totalIncidents, 0);
   const totalResolved = rows.reduce((a, r) => a + r.resolved, 0);
-  const canUseLive = liveRows.length >= 2;
 
   return (
     <div className="min-h-full space-y-4 p-6 animate-fade-in">
@@ -59,11 +54,10 @@ const ResponderLiveRace = () => {
           <h1 className="font-mono text-sm font-black uppercase tracking-[0.32em] text-foreground">
             Responder · Live Race
           </h1>
-          <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-primary">
-            Demo Preview
+          <span className="rounded-full border border-success/40 bg-success/10 px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.2em] text-success">
+            Live Data
           </span>
         </div>
-        <ModeToggle value={mode} onChange={setMode} canUseLive={canUseLive} />
       </div>
 
       <RaceHeader
@@ -71,7 +65,6 @@ const ResponderLiveRace = () => {
         responderCount={rows.length}
         totalIncidents={totalIncidents}
         totalResolved={totalResolved}
-        mode={mode}
       />
 
       {rows.length > 0 && (
@@ -98,14 +91,12 @@ const ResponderLiveRace = () => {
         <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border py-20 text-muted-foreground">
           <Info className="h-6 w-6" />
           <p className="font-mono text-xs uppercase tracking-widest">
-            No responder data in live mode.
+            {loading
+              ? "Loading incident data…"
+              : error
+                ? error
+                : "No responders with assignments yet."}
           </p>
-          <button
-            onClick={() => setMode("mock")}
-            className="font-mono text-[11px] uppercase tracking-widest text-primary hover:underline"
-          >
-            Switch to Demo →
-          </button>
         </div>
       ) : (
         <div className="space-y-1.5">
@@ -153,41 +144,6 @@ const ResponderLiveRace = () => {
     </div>
   );
 };
-
-const ModeToggle = ({
-  value,
-  onChange,
-  canUseLive,
-}: {
-  value: Mode;
-  onChange: (v: Mode) => void;
-  canUseLive: boolean;
-}) => (
-  <div className="flex items-center rounded-md border border-border bg-[hsl(220_20%_8%)] p-0.5 font-mono text-[10px] uppercase tracking-[0.22em]">
-    <button
-      onClick={() => onChange("mock")}
-      className={`rounded px-3 py-1 transition-colors ${
-        value === "mock"
-          ? "bg-primary/15 text-primary shadow-[0_0_0_1px_hsl(193_95%_55%/0.3)]"
-          : "text-muted-foreground hover:text-foreground"
-      }`}
-    >
-      Demo
-    </button>
-    <button
-      onClick={() => canUseLive && onChange("live")}
-      disabled={!canUseLive}
-      title={canUseLive ? "Switch to live incident data" : "Live mode needs ≥2 responders with data"}
-      className={`rounded px-3 py-1 transition-colors ${
-        value === "live"
-          ? "bg-success/15 text-success shadow-[0_0_0_1px_hsl(142_76%_36%/0.3)]"
-          : "text-muted-foreground hover:text-foreground"
-      } ${!canUseLive ? "cursor-not-allowed opacity-40" : ""}`}
-    >
-      Live
-    </button>
-  </div>
-);
 
 const Legend = ({ color, label }: { color: string; label: string }) => (
   <div className="flex items-center gap-1.5">
