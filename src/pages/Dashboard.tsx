@@ -216,7 +216,7 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           <ThreatMap />
         </div>
-        <div className="lg:max-h-[480px]">
+        <div className="lg:h-full min-h-0">
           <ResponderLeaderboard />
         </div>
       </div>
