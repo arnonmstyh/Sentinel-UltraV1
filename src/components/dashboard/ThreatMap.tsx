@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Globe, Maximize2, Minimize2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useIncidents } from "@/context/useIncidents";
-import ExecutiveSummary from "./ExecutiveSummary";
+import PresentationOverlay from "./presentation/PresentationOverlay";
 
 const THAILAND: [number, number] = [100.9925, 15.87];
 
@@ -758,11 +758,13 @@ const ThreatMap = () => {
             </button>
           </div>
 
-          {/* Executive Summary — overlay shown only in fullscreen */}
+          {/* Live presentation slideshow — only mounted when fullscreen */}
           {isFullscreen && (
-            <div className="absolute top-3 left-3 z-20 w-[540px] max-w-[46vw] shadow-2xl animate-fade-in">
-              <ExecutiveSummary />
-            </div>
+            <PresentationOverlay
+              isActive={isFullscreen}
+              isInteracting={dragging || !!hover}
+              onExit={toggleFullscreen}
+            />
           )}
 
           {/* Hint */}
