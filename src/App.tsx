@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { IncidentsProvider } from "@/context/useIncidents";
+import { VpnUsageProvider } from "@/context/useVpnUsage";
 import { AuthProvider, useAuth } from "@/context/auth";
 import Layout from "./components/Layout";
 import Dashboard from "./pages/Dashboard";
@@ -16,6 +17,7 @@ import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import SSLMonitor from "./pages/SSLMonitor";
 import ResponderLiveRace from "./pages/ResponderLiveRace";
+import VpnAccess from "./pages/VpnAccess";
 
 const queryClient = new QueryClient();
 
@@ -30,23 +32,26 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <IncidentsProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route element={<RequireAuth><Layout><Outlet /></Layout></RequireAuth>}>
-                <Route index element={<Dashboard />} />
-                <Route path="incidents" element={<Incidents />} />
-                <Route path="incidents/:id" element={<IncidentDetail />} />
-                <Route path="reports" element={<Reports />} />
-                <Route path="ssl-monitor" element={<SSLMonitor />} />
-                <Route path="responders/live-race" element={<ResponderLiveRace />} />
-                <Route path="settings" element={<Settings />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+          <VpnUsageProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route element={<RequireAuth><Layout><Outlet /></Layout></RequireAuth>}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="incidents" element={<Incidents />} />
+                  <Route path="incidents/:id" element={<IncidentDetail />} />
+                  <Route path="reports" element={<Reports />} />
+                  <Route path="ssl-monitor" element={<SSLMonitor />} />
+                  <Route path="vpn-access" element={<VpnAccess />} />
+                  <Route path="responders/live-race" element={<ResponderLiveRace />} />
+                  <Route path="settings" element={<Settings />} />
+                  <Route path="*" element={<NotFound />} />
+                </Route>
+              </Routes>
+            </BrowserRouter>
+          </VpnUsageProvider>
         </IncidentsProvider>
       </AuthProvider>
     </TooltipProvider>

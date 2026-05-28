@@ -7,6 +7,7 @@ const { initScheduler, updateAllUrls, checkAndSendExpirationAlerts, pollServiceH
 const { checkSSL, checkServiceHealth } = require('./sslService');
 const { seedIncidents, syncIncidentsFromSheet: syncFromSheet } = require('./incidentService');
 const { sendTelegramMessage } = require('./telegramService');
+const { getVpnUsage } = require('./vpnService');
 const { validateUrl, validateBulkUrls, validateIncident, validateIncidentUpdate } = require('./middleware/validation');
 const { apiLimiter, writeLimiter, bulkLimiter } = require('./middleware/rateLimit');
 const { errorHandler, asyncHandler } = require('./middleware/errorHandler');
@@ -478,6 +479,13 @@ app.get('/api/ngrok-backend-url', asyncHandler(async (req, res) => {
     }
     
     res.json({ backendUrl: null });
+}));
+
+// VPN access log (live from Google Sheet, in-memory cached)
+app.get('/api/vpn-usage', asyncHandler(async (req, res) => {
+    const force = req.query.force === '1';
+    const records = await getVpnUsage({ force });
+    res.json(records);
 }));
 
 // SPA fallback - serve index.html for all non-API routes

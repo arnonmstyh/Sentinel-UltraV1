@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Shield, LayoutDashboard, AlertTriangle, FileText, Settings } from "lucide-react";
+import { Shield, LayoutDashboard, AlertTriangle, FileText, Settings, KeyRound } from "lucide-react";
 import { useAuth } from "@/context/auth";
 import AICompanion from "./AICompanion";
 
@@ -16,6 +16,7 @@ const Layout = ({ children }: LayoutProps) => {
     { path: "/incidents", icon: AlertTriangle, label: "Incidents" },
     { path: "/reports", icon: FileText, label: "Reports" },
     { path: "/ssl-monitor", icon: Shield, label: "SSL Monitor" },
+    { path: "/vpn-access", icon: KeyRound, label: "VPN Access" },
     { path: "/settings", icon: Settings, label: "Settings" },
     { path: "/records", icon: FileText, label: "Records" },
   ];

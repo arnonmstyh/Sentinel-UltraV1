@@ -20,7 +20,7 @@ import { ArrowLeft, Clock, Edit2, MapPin, Network, Plus, Save, Shield, Trash2, U
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import IncidentAttackVector from "@/components/dashboard/IncidentAttackVector";
+import IncidentVectorFlow from "@/components/incident-flow/IncidentVectorFlow";
 import type { IncidentStatus } from "@/types/incident";
 
 const IncidentDetail = () => {
@@ -351,7 +351,7 @@ const IncidentDetail = () => {
       </div>
 
       {/* Attack Vector Analysis */}
-      <IncidentAttackVector incident={incident} />
+      <IncidentVectorFlow incident={incident} />
 
       {/* Timeline Visualization */}
       <Card className="bg-gradient-card border-border">

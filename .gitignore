@@ -32,4 +32,12 @@ ngrok_current.log
 *.sln
 *.sw?
 *.backup
+*.bak
 ngrok.yml
+
+# Migration bundles (applied; kept on disk for reference)
+migration/
+migration.zip
+
+# Stray screenshots in the repo root
+/Screenshot*.png
